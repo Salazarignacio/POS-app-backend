@@ -28,8 +28,19 @@ public class ProductoDAO implements GenericDAO<Producto> {
         try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, entity.getArticulo());
             stmt.setString(2, entity.getCategoria());
-            stmt.setDouble(3, entity.getPrecio());
-            stmt.setInt(4, entity.getStock());
+            
+            if (entity.getPrecio() != null) {
+                stmt.setDouble(3, entity.getPrecio());
+            } else {
+                stmt.setNull(3, java.sql.Types.DOUBLE);
+            }
+            
+            if (entity.getStock() != null) {
+                stmt.setInt(4, entity.getStock());
+            } else {
+                stmt.setNull(4, java.sql.Types.INTEGER);
+            }
+            
             stmt.setString(5, entity.getCodigo());
 
             int filasAfectadas = stmt.executeUpdate();
@@ -134,10 +145,19 @@ public class ProductoDAO implements GenericDAO<Producto> {
             if (entity.getPorcentaje() != null) {
                 stmt.setDouble(3, entity.getPorcentaje());
             } else {
-                stmt.setDouble(3, entity.getPrecio());
+                if (entity.getPrecio() != null) {
+                    stmt.setDouble(3, entity.getPrecio());
+                } else {
+                    stmt.setNull(3, java.sql.Types.DOUBLE);
+                }
             }
 
-            stmt.setInt(4, entity.getStock());
+            if (entity.getStock() != null) {
+                stmt.setInt(4, entity.getStock());
+            } else {
+                stmt.setNull(4, java.sql.Types.INTEGER);
+            }
+            
             stmt.setString(5, entity.getCodigo());
             stmt.setLong(6, id);
 
