@@ -125,31 +125,32 @@ public class ProductoDAO implements GenericDAO<Producto> {
             throw new IllegalArgumentException("El producto a actualizar no puede ser null");
         }
 
-        String sql;
-
+        // Si hay un porcentaje, calculamos el nuevo precio y lo redondeamos en Java
+        // para asegurar que el valor sea limpio (múltiplo de 50) y sin decimales.
         if (entity.getPorcentaje() != null) {
-            sql = "UPDATE producto SET articulo = ?, categoria = ?, "
-                    + "precio = precio * (1 + ?/100), stock = ?, codigo = ? "
-                    + "WHERE id = ?";
-        } else {
-            sql = "UPDATE producto SET articulo = ?, categoria = ?, "
-                    + "precio = ?, stock = ?, codigo = ? "
-                    + "WHERE id = ?";
+            Producto productoActual = leer(id);
+            if (productoActual.getPrecio() != null) {
+                double nuevoPrecio = productoActual.getPrecio() * (1 + entity.getPorcentaje() / 100.0);
+                // Redondeo al múltiplo de 50 más cercano
+                double precioRedondeado = Math.round(nuevoPrecio / 50.0) * 50.0;
+                entity.setPrecio(precioRedondeado);
+                entity.setPorcentaje(null); // Limpiamos para usar el SQL estándar de precio fijo
+            }
         }
+
+        String sql = "UPDATE producto SET articulo = ?, categoria = ?, "
+                + "precio = ?, stock = ?, codigo = ? "
+                + "WHERE id = ?";
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, entity.getArticulo());
             stmt.setString(2, entity.getCategoria());
 
-            if (entity.getPorcentaje() != null) {
-                stmt.setDouble(3, entity.getPorcentaje());
+            if (entity.getPrecio() != null) {
+                stmt.setDouble(3, entity.getPrecio());
             } else {
-                if (entity.getPrecio() != null) {
-                    stmt.setDouble(3, entity.getPrecio());
-                } else {
-                    stmt.setNull(3, java.sql.Types.DOUBLE);
-                }
+                stmt.setNull(3, java.sql.Types.DOUBLE);
             }
 
             if (entity.getStock() != null) {
