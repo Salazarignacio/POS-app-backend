@@ -94,7 +94,7 @@ public class ProductoDAO implements GenericDAO<Producto> {
     @Override
     public ArrayList<Producto> leerTodos() throws Exception {
         ArrayList<Producto> productos = new ArrayList<>();
-        String sql = "SELECT * FROM producto";
+        String sql = "SELECT * FROM producto ORDER BY id DESC LIMIT 50";
         try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
@@ -199,6 +199,7 @@ public class ProductoDAO implements GenericDAO<Producto> {
         WHERE LOWER(codigo) LIKE LOWER(?) 
         OR LOWER(articulo) LIKE LOWER(?) 
         OR LOWER(categoria) LIKE LOWER(?)
+        LIMIT 50
         """;
 
         List<Producto> productos = new ArrayList<>();
