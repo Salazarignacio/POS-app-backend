@@ -94,7 +94,7 @@ public class ProductoDAO implements GenericDAO<Producto> {
     @Override
     public ArrayList<Producto> leerTodos() throws Exception {
         ArrayList<Producto> productos = new ArrayList<>();
-        String sql = "SELECT * FROM producto ORDER BY id DESC LIMIT 50";
+        String sql = "SELECT * FROM producto ORDER BY id DESC LIMIT 20";
         try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
@@ -194,21 +194,22 @@ public class ProductoDAO implements GenericDAO<Producto> {
         if (codigo == null || codigo.trim().isEmpty()) {
             throw new IllegalArgumentException("Codigo inválido para leer producto");
         }
+        
+        String busqueda = "%" + codigo.trim() + "%";
         String sql = """
-        SELECT * FROM producto 
-        WHERE LOWER(codigo) LIKE LOWER(?) 
-        OR LOWER(articulo) LIKE LOWER(?) 
-        OR LOWER(categoria) LIKE LOWER(?)
-        LIMIT 50
+            SELECT * FROM producto 
+            WHERE codigo LIKE ? 
+               OR articulo LIKE ? 
+               OR categoria LIKE ?
+            ORDER BY LENGTH(codigo) ASC, articulo ASC
+            LIMIT 100
         """;
 
         List<Producto> productos = new ArrayList<>();
 
-        try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, codigo);
-
-            String busqueda = "%" + codigo + "%";
-
+        try (Connection conn = dataSource.getConnection(); 
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
             stmt.setString(1, busqueda);
             stmt.setString(2, busqueda);
             stmt.setString(3, busqueda);
@@ -228,6 +229,8 @@ public class ProductoDAO implements GenericDAO<Producto> {
                 }
             }
             return productos;
+        } catch (SQLException e) {
+            throw new SQLException("Error al buscar productos por código: " + codigo, e);
         }
     }
 
