@@ -131,9 +131,9 @@ public class ProductoDAO implements GenericDAO<Producto> {
             Producto productoActual = leer(id);
             if (productoActual.getPrecio() != null) {
                 double nuevoPrecio = productoActual.getPrecio() * (1 + entity.getPorcentaje() / 100.0);
-                // Redondeo al múltiplo de 50 más cercano
+                // Redondeo al múltiplo de 50 más cercano y eliminamos decimales
                 double precioRedondeado = Math.round(nuevoPrecio / 50.0) * 50.0;
-                entity.setPrecio(precioRedondeado);
+                entity.setPrecio((double) (int) precioRedondeado);
                 entity.setPorcentaje(null); // Limpiamos para usar el SQL estándar de precio fijo
             }
         }
