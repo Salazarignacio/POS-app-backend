@@ -23,13 +23,16 @@ public class ProductoService implements GenericService<Producto> {
             throw new IllegalArgumentException("El producto no puede ser null");
         }
 
-        if (entity.getPrecio() < 0) {
+        System.out.println("Intentando guardar producto: " + entity);
+
+        if (entity.getPrecio() != null && entity.getPrecio() < 0) {
             throw new IllegalArgumentException("El precio debe ser mayor a cero");
         }
 
         try {
             prodDAO.crear(entity);
         } catch (SQLException e) {
+            System.err.println("Error SQL al crear producto: " + e.getMessage());
             throw new RuntimeException("No se pudo crear el producto", e);
         }
     }
