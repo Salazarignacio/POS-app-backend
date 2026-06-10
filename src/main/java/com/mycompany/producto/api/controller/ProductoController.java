@@ -33,7 +33,7 @@ public class ProductoController {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al crear el producto");
+                    .body("Error al crear el producto: " + (e.getCause() != null ? e.getCause().getMessage() : e.getMessage()));
         }
     }
 
