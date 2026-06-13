@@ -23,10 +23,29 @@ public class ProductoService implements GenericService<Producto> {
             throw new IllegalArgumentException("El producto no puede ser null");
         }
 
+        // Validaciones obligatorias
+        if (entity.getCodigo() == null || entity.getCodigo().trim().isEmpty()) {
+            throw new IllegalArgumentException("El código del producto es obligatorio");
+        }
+        if (entity.getArticulo() == null || entity.getArticulo().trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre (artículo) del producto es obligatorio");
+        }
+
+        // Valores por defecto para campos opcionales
+        if (entity.getCategoria() == null) {
+            entity.setCategoria("");
+        }
+        if (entity.getPrecio() == null) {
+            entity.setPrecio(0.0);
+        }
+        if (entity.getStock() == null) {
+            entity.setStock(0);
+        }
+
         System.out.println("Intentando guardar producto: " + entity);
 
-        if (entity.getPrecio() != null && entity.getPrecio() < 0) {
-            throw new IllegalArgumentException("El precio debe ser mayor a cero");
+        if (entity.getPrecio() < 0) {
+            throw new IllegalArgumentException("El precio no puede ser negativo");
         }
 
         try {

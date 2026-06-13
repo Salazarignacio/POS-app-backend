@@ -32,13 +32,13 @@ public class ProductoDAO implements GenericDAO<Producto> {
             if (entity.getPrecio() != null) {
                 stmt.setDouble(3, entity.getPrecio());
             } else {
-                stmt.setNull(3, java.sql.Types.DOUBLE);
+                stmt.setDouble(3, 0.0);
             }
             
             if (entity.getStock() != null) {
                 stmt.setInt(4, entity.getStock());
             } else {
-                stmt.setNull(4, java.sql.Types.INTEGER);
+                stmt.setInt(4, 0);
             }
             
             stmt.setString(5, entity.getCodigo());
