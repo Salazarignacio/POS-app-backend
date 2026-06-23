@@ -116,4 +116,13 @@ public class ProductoService implements GenericService<Producto> {
             throw new RuntimeException("Error al buscar el producto con código " + code, e);
         }
     }
+
+    public List<Producto> filter(String articulo, String categoria, String codigo) throws Exception {
+        try {
+            return prodDAO.filtrar(articulo, categoria, codigo);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al filtrar productos en el servicio", e);
+        }
+    }
 }
+

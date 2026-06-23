@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -93,6 +94,19 @@ public class ProductoController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Producto no encontrado");
+        }
+    }
+
+    @GetMapping("/filtrar")
+    public ResponseEntity<?> filtrarProductos(
+            @RequestParam(required = false) String articulo,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String codigo) throws Exception {
+        try {
+            return ResponseEntity.ok(pService.filter(articulo, categoria, codigo));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al filtrar productos: " + e.getMessage());
         }
     }
 }

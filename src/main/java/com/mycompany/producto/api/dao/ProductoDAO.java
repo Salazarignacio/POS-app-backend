@@ -234,4 +234,51 @@ public class ProductoDAO implements GenericDAO<Producto> {
         }
     }
 
+    public List<Producto> filtrar(String articulo, String categoria, String codigo) throws Exception {
+        StringBuilder sql = new StringBuilder("SELECT * FROM producto WHERE 1=1");
+        List<String> params = new ArrayList<>();
+        
+        if (articulo != null && !articulo.trim().isEmpty()) {
+            sql.append(" AND articulo LIKE ?");
+            params.add("%" + articulo.trim() + "%");
+        }
+        if (categoria != null && !categoria.trim().isEmpty()) {
+            sql.append(" AND categoria LIKE ?");
+            params.add("%" + categoria.trim() + "%");
+        }
+        if (codigo != null && !codigo.trim().isEmpty()) {
+            sql.append(" AND codigo LIKE ?");
+            params.add("%" + codigo.trim() + "%");
+        }
+        
+        sql.append(" ORDER BY id DESC LIMIT 100");
+        
+        List<Producto> productos = new ArrayList<>();
+        try (Connection conn = dataSource.getConnection(); 
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setString(i + 1, params.get(i));
+            }
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Producto prod = new Producto(
+                            rs.getString("articulo"),
+                            rs.getString("categoria"),
+                            rs.getDouble("precio"),
+                            rs.getInt("stock"),
+                            rs.getString("codigo")
+                    );
+                    prod.setId(rs.getLong("id"));
+                    productos.add(prod);
+                }
+            }
+            return productos;
+        } catch (SQLException e) {
+            throw new SQLException("Error al filtrar productos: " + e.getMessage(), e);
+        }
+    }
+
 }
+
