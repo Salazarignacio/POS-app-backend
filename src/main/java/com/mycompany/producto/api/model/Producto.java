@@ -9,6 +9,8 @@ public class Producto {
     private Double precio;
     private Integer stock;
     private Double porcentaje;
+    private Long proveedorId;
+    private String proveedorNombre;
 
     public Producto() {
     }
@@ -87,8 +89,24 @@ public class Producto {
         this.stock = stock;
     }
 
+    public Long getProveedorId() {
+        return proveedorId;
+    }
+
+    public void setProveedorId(Long proveedorId) {
+        this.proveedorId = proveedorId;
+    }
+
+    public String getProveedorNombre() {
+        return proveedorNombre;
+    }
+
+    public void setProveedorNombre(String proveedorNombre) {
+        this.proveedorNombre = proveedorNombre;
+    }
+
     @Override
     public String toString() {
-        return "Producto{" + "id=" + id + ", codigo=" + codigo + ", articulo=" + articulo + ", categoria=" + categoria + ", precio=" + precio + ", stock=" + stock + '}';
+        return "Producto{" + "id=" + id + ", codigo=" + codigo + ", articulo=" + articulo + ", categoria=" + categoria + ", precio=" + precio + ", stock=" + stock + ", proveedorId=" + proveedorId + ", proveedorNombre=" + proveedorNombre + '}';
     }
 }

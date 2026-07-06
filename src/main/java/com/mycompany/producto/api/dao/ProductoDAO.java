@@ -23,7 +23,7 @@ public class ProductoDAO implements GenericDAO<Producto> {
         if (entity == null) {
             throw new IllegalArgumentException("El producto no puede ser null");
         }
-        String sql = "INSERT INTO producto (articulo, categoria, precio, stock, codigo) VALUES (?,?,?,?,?)";
+        String sql = "INSERT INTO producto (articulo, categoria, precio, stock, codigo, proveedor_id) VALUES (?,?,?,?,?,?)";
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, entity.getArticulo());
@@ -42,6 +42,12 @@ public class ProductoDAO implements GenericDAO<Producto> {
             }
             
             stmt.setString(5, entity.getCodigo());
+
+            if (entity.getProveedorId() != null) {
+                stmt.setLong(6, entity.getProveedorId());
+            } else {
+                stmt.setNull(6, java.sql.Types.BIGINT);
+            }
 
             int filasAfectadas = stmt.executeUpdate();
 
@@ -67,7 +73,7 @@ public class ProductoDAO implements GenericDAO<Producto> {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("ID inválido para leer producto");
         }
-        String sql = "SELECT * FROM producto WHERE id = ?";
+        String sql = "SELECT p.*, prov.nombre AS proveedor_nombre FROM producto p LEFT JOIN proveedor prov ON p.proveedor_id = prov.id WHERE p.id = ?";
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
@@ -83,6 +89,13 @@ public class ProductoDAO implements GenericDAO<Producto> {
                     );
 
                     prod.setId(rs.getLong("id"));
+                    
+                    long provId = rs.getLong("proveedor_id");
+                    if (!rs.wasNull()) {
+                        prod.setProveedorId(provId);
+                        prod.setProveedorNombre(rs.getString("proveedor_nombre"));
+                    }
+                    
                     return prod;
                 } else {
                     throw new SQLException("No se encontró producto con id " + id);
@@ -94,7 +107,7 @@ public class ProductoDAO implements GenericDAO<Producto> {
     @Override
     public ArrayList<Producto> leerTodos() throws Exception {
         ArrayList<Producto> productos = new ArrayList<>();
-        String sql = "SELECT * FROM producto ORDER BY id DESC LIMIT 20";
+        String sql = "SELECT p.*, prov.nombre AS proveedor_nombre FROM producto p LEFT JOIN proveedor prov ON p.proveedor_id = prov.id ORDER BY p.id DESC LIMIT 20";
         try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
@@ -106,6 +119,13 @@ public class ProductoDAO implements GenericDAO<Producto> {
                         rs.getString("codigo")
                 );
                 prod.setId(rs.getLong("id"));
+                
+                long provId = rs.getLong("proveedor_id");
+                if (!rs.wasNull()) {
+                    prod.setProveedorId(provId);
+                    prod.setProveedorNombre(rs.getString("proveedor_nombre"));
+                }
+                
                 productos.add(prod);
             }
         } catch (SQLException e) {
@@ -139,7 +159,7 @@ public class ProductoDAO implements GenericDAO<Producto> {
         }
 
         String sql = "UPDATE producto SET articulo = ?, categoria = ?, "
-                + "precio = ?, stock = ?, codigo = ? "
+                + "precio = ?, stock = ?, codigo = ?, proveedor_id = ? "
                 + "WHERE id = ?";
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -160,7 +180,14 @@ public class ProductoDAO implements GenericDAO<Producto> {
             }
             
             stmt.setString(5, entity.getCodigo());
-            stmt.setLong(6, id);
+            
+            if (entity.getProveedorId() != null) {
+                stmt.setLong(6, entity.getProveedorId());
+            } else {
+                stmt.setNull(6, java.sql.Types.BIGINT);
+            }
+            
+            stmt.setLong(7, id);
 
             int filasAfectadas = stmt.executeUpdate();
 
@@ -197,11 +224,13 @@ public class ProductoDAO implements GenericDAO<Producto> {
         
         String busqueda = "%" + codigo.trim() + "%";
         String sql = """
-            SELECT * FROM producto 
-            WHERE codigo LIKE ? 
-               OR articulo LIKE ? 
-               OR categoria LIKE ?
-            ORDER BY LENGTH(codigo) ASC, articulo ASC
+            SELECT p.*, prov.nombre AS proveedor_nombre 
+            FROM producto p 
+            LEFT JOIN proveedor prov ON p.proveedor_id = prov.id
+            WHERE p.codigo LIKE ? 
+               OR p.articulo LIKE ? 
+               OR p.categoria LIKE ?
+            ORDER BY LENGTH(p.codigo) ASC, p.articulo ASC
             LIMIT 100
         """;
 
@@ -225,6 +254,13 @@ public class ProductoDAO implements GenericDAO<Producto> {
                     );
 
                     prod.setId(rs.getLong("id"));
+                    
+                    long provId = rs.getLong("proveedor_id");
+                    if (!rs.wasNull()) {
+                        prod.setProveedorId(provId);
+                        prod.setProveedorNombre(rs.getString("proveedor_nombre"));
+                    }
+                    
                     productos.add(prod);
                 }
             }
@@ -234,31 +270,42 @@ public class ProductoDAO implements GenericDAO<Producto> {
         }
     }
 
-    public List<Producto> filtrar(String articulo, String categoria, String codigo) throws Exception {
-        StringBuilder sql = new StringBuilder("SELECT * FROM producto WHERE 1=1");
-        List<String> params = new ArrayList<>();
+    public List<Producto> filtrar(String articulo, String categoria, String codigo, Long proveedorId) throws Exception {
+        StringBuilder sql = new StringBuilder("SELECT p.*, prov.nombre AS proveedor_nombre FROM producto p LEFT JOIN proveedor prov ON p.proveedor_id = prov.id WHERE 1=1");
+        List<Object> params = new ArrayList<>();
         
         if (articulo != null && !articulo.trim().isEmpty()) {
-            sql.append(" AND articulo LIKE ?");
+            sql.append(" AND p.articulo LIKE ?");
             params.add("%" + articulo.trim() + "%");
         }
         if (categoria != null && !categoria.trim().isEmpty()) {
-            sql.append(" AND categoria LIKE ?");
+            sql.append(" AND p.categoria LIKE ?");
             params.add("%" + categoria.trim() + "%");
         }
         if (codigo != null && !codigo.trim().isEmpty()) {
-            sql.append(" AND codigo LIKE ?");
+            sql.append(" AND p.codigo LIKE ?");
             params.add("%" + codigo.trim() + "%");
         }
+        if (proveedorId != null) {
+            sql.append(" AND p.proveedor_id = ?");
+            params.add(proveedorId);
+        }
         
-        sql.append(" ORDER BY id DESC LIMIT 100");
+        sql.append(" ORDER BY p.id DESC LIMIT 100");
         
         List<Producto> productos = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); 
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             
             for (int i = 0; i < params.size(); i++) {
-                stmt.setString(i + 1, params.get(i));
+                Object val = params.get(i);
+                if (val instanceof String) {
+                    stmt.setString(i + 1, (String) val);
+                } else if (val instanceof Long) {
+                    stmt.setLong(i + 1, (Long) val);
+                } else {
+                    stmt.setObject(i + 1, val);
+                }
             }
             
             try (ResultSet rs = stmt.executeQuery()) {
@@ -271,6 +318,13 @@ public class ProductoDAO implements GenericDAO<Producto> {
                             rs.getString("codigo")
                     );
                     prod.setId(rs.getLong("id"));
+                    
+                    long provId = rs.getLong("proveedor_id");
+                    if (!rs.wasNull()) {
+                        prod.setProveedorId(provId);
+                        prod.setProveedorNombre(rs.getString("proveedor_nombre"));
+                    }
+                    
                     productos.add(prod);
                 }
             }

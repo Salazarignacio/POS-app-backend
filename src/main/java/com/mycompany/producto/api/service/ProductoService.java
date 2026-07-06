@@ -117,9 +117,9 @@ public class ProductoService implements GenericService<Producto> {
         }
     }
 
-    public List<Producto> filter(String articulo, String categoria, String codigo) throws Exception {
+    public List<Producto> filter(String articulo, String categoria, String codigo, Long proveedorId) throws Exception {
         try {
-            return prodDAO.filtrar(articulo, categoria, codigo);
+            return prodDAO.filtrar(articulo, categoria, codigo, proveedorId);
         } catch (SQLException e) {
             throw new RuntimeException("Error al filtrar productos en el servicio", e);
         }

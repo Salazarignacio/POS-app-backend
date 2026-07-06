@@ -101,9 +101,10 @@ public class ProductoController {
     public ResponseEntity<?> filtrarProductos(
             @RequestParam(required = false) String articulo,
             @RequestParam(required = false) String categoria,
-            @RequestParam(required = false) String codigo) throws Exception {
+            @RequestParam(required = false) String codigo,
+            @RequestParam(required = false) Long proveedorId) throws Exception {
         try {
-            return ResponseEntity.ok(pService.filter(articulo, categoria, codigo));
+            return ResponseEntity.ok(pService.filter(articulo, categoria, codigo, proveedorId));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al filtrar productos: " + e.getMessage());
