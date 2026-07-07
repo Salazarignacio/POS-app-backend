@@ -86,17 +86,34 @@ public class ProveedorDAO {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("ID inválido para eliminar proveedor");
         }
+        String updateProductsSql = "UPDATE producto SET proveedor_id = NULL WHERE proveedor_id = ?";
         String sql = "DELETE FROM proveedor WHERE ID = ?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            int filasAfectadas = stmt.executeUpdate();
-            if (filasAfectadas == 0) {
-                throw new SQLException("ID no encontrado " + id);
+        try (Connection conn = dataSource.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement updateStmt = conn.prepareStatement(updateProductsSql)) {
+                    updateStmt.setInt(1, id);
+                    updateStmt.executeUpdate();
+                }
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setInt(1, id);
+                    int filasAfectadas = stmt.executeUpdate();
+                    if (filasAfectadas == 0) {
+                        throw new SQLException("ID no encontrado " + id);
+                    }
+                }
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
             throw new SQLException("Error al eliminar el proveedor con id " + id, e);
         }
     }
+
 
     public void actualizar(Integer id, Proveedor entity) throws Exception {
         if (id == null || id <= 0) {
